@@ -63,8 +63,7 @@
                        /* Handle open permission event */
 
                        if (metadata->mask & FAN_OPEN_PERM) {
-                           printf("FAN_OPEN_PERM: ");
-
+                           printf("FAN_OPEN_PERM, %d : ",metadata->pid);
                            /* Allow file to be opened */
 
                            response.fd = metadata->fd;
@@ -76,7 +75,7 @@
                        /* Handle closing of writable file event */
 
                        if (metadata->mask & FAN_CLOSE_WRITE)
-                           printf("FAN_CLOSE_WRITE: ");
+                           printf("FAN_CLOSE_WRITE, %d : ",metadata->pid);
 
                        /* Retrieve and print pathname of the accessed file */
 
