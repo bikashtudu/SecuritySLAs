@@ -1,7 +1,6 @@
 /*
  * Hooking kernel functions using ftrace framework
  *
- * Copyright (c) 2018 ilammy
  */
 
 #define pr_fmt(fmt) "ftrace_hook: " fmt
@@ -17,7 +16,7 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/fdtable.h>
-MODULE_DESCRIPTION("Kernel module hooking clone(), execve(), open(), openat(), read() and write() via ftrace");
+MODULE_DESCRIPTION("Kernel module hooking for clone(), execve(),open(), openat(), read() and write() via ftrace");
 MODULE_AUTHOR("Bikash <tudu.bikash@gmail.com>");
 MODULE_LICENSE("GPL");
 
