@@ -6,7 +6,7 @@ For Debian-based systems::
 
 Build the kernel module::
 
-    $ cd ftrace-hook
+    $ cd lkm
     $ make
     $ sudo insmod ftrace_hook.ko
     $ ls -l
