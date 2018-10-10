@@ -1,11 +1,13 @@
 import os 
 import re
+import getpass
+
+username = getpass.getuser()
 
 m1 = {}
-m2 = {}
 
-
-output_file = open("/home/prasad/Desktop/btp/test2/service_data.pl","r")
+'''
+output_file = open("/home/prasad/Desktop/btp/test2/service-logging/service_data.pl","r")
 
 for line in output_file:
 	if 'service_mon' in line:
@@ -21,13 +23,14 @@ for line in output_file:
 		break
 	
 output_file.close()
+'''
 
-output_file = open("/home/prasad/Desktop/btp/test2/service_data.pl","r")
+output_file = open("/home/prasad/Desktop/btp/test2/service-logging/service_knowledgebase.txt","r")
 knowledge_base = output_file.readlines()
 output_file.close()
 
-in_file = open("/home/prasad/Desktop/btp/test2/service.txt","r")
-output_file = open("/home/prasad/Desktop/btp/test2/service_data.pl","w+")
+in_file = open("/home/prasad/Desktop/btp/test2/service-logging/service.log","r")
+output_file = open("/home/prasad/Desktop/btp/test2/service-logging/service_data.pl","w+")
 
 soft1 = "acpid"
 soft2 = "bluetooth"
@@ -40,18 +43,20 @@ for line in in_file:
 		if ser_name in m1:	
 			if not(ser_state in m1[ser_name]):
 				m1[ser_name].append(ser_state)
-				file_output = 'service_mon('+ser_name+','+ser_state+',vm2).\n'
+				file_output = 'service_mon('+ser_name+','+ser_state+','+username+',vm2).\n'
 				output_file.write(file_output)			
 		else:	
 			m1[ser_name] = [ser_state]	
-			file_output = 'service_mon('+ser_name+','+ser_state+',vm2).\n'
+			file_output = 'service_mon('+ser_name+','+ser_state+','+username+',vm2).\n'
 			output_file.write(file_output)
 
+output_file.write('\n')
 output_file.writelines(knowledge_base)	
 output_file.close()
 in_file.close()	
 	    
 		
+
 
 
 
