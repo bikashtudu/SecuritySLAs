@@ -22,14 +22,14 @@ for line in output_file:
 output_file.close()
 '''
 
-output_file = open("login_knowledgebase.txt","r")
+output_file = open("/home/prasad/Desktop/btp/test2/login-logging/login_knowledgebase.txt","r")
 knowledge_base = output_file.readlines()
 output_file.close()
 
 match1 = "session opened for"
 
 in_file = open("/var/log/auth.log","r")
-output_file = open("login_data.pl","w+")
+output_file = open("/home/prasad/Desktop/btp/test2/login-logging/login_data.pl","w+")
 
 for line in in_file:
 	if match1 in line:
