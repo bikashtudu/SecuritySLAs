@@ -22,12 +22,12 @@ for line in output_file:
 output_file.close()
 '''
 
-output_file = open("/home/prasad/Desktop/btp/test2/service-logging/service_knowledgebase.txt","r")
+output_file = open("service_knowledgebase.txt","r")
 knowledge_base = output_file.readlines()
 output_file.close()
 
-in_file = open("/home/prasad/Desktop/btp/test2/service-logging/service.log","r")
-output_file = open("/home/prasad/Desktop/btp/test2/service-logging/service_data.pl","w+")
+in_file = open("service.log","r")
+output_file = open("service_data.pl","w+")
 
 soft1 = "acpid"
 soft2 = "bluetooth"

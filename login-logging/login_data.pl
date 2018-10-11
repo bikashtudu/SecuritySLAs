@@ -1,4 +1,4 @@
-user_login(roo,vm2).
+user_login(root,vm2).
 
 users(root).
 users(prasad).
