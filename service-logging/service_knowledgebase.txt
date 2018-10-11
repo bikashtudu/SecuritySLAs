@@ -1,23 +1,9 @@
-service(acpid).
-service(bluetooth).
+service_req(acpid,active,[vm2]).
+service_req(bluetooth,active,[vm2,vm1]).
 
-ser_state(active).
-ser_state(inactive).
+vms(X,[X|_]).
+vms(X,[_|Tail]):- vms(X,Tail).
 
-ser_provided(acpid,[active],[ubuntu],[vm2]).
-ser_provided(bluetooth,[active],[ubuntu],[vm1,vm2]).
+service(X,Y,V):- service_req(X,Y,K),vms(V,K).
 
-ser_check(X,[X|_]).
-ser_check(X,[_|Tail]):- ser_check(X,Tail).
-
-vm_check(X,[X|_]).
-vm_check(X,[_|Tail]):- ser_check(X,Tail).
-
-user_check(X,[X|_]).
-user_check(X,[_|Tail]):- ser_check(X,Tail).
-
-ser_granted(X,Y,U,V):- ser_provided(X,Z,A,K),ser_check(Y,Z),user_check(U,A),vm_check(V,K).
-
-check(X,Y,U,V):-service(X),ser_state(Y),ser_granted(X,Y,U,V).
-
-sla():- forall(service_mon(X,Y,U,V),check(X,Y,U,V)).
+sla():- forall(service(X,Y,V),service_check(X,Y,V)).
