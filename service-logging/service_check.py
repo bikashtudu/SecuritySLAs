@@ -1,8 +1,5 @@
 import os 
 import re
-import getpass
-
-username = getpass.getuser()
 
 m1 = {}
 
@@ -43,11 +40,11 @@ for line in in_file:
 		if ser_name in m1:	
 			if not(ser_state in m1[ser_name]):
 				m1[ser_name].append(ser_state)
-				file_output = 'service_mon('+ser_name+','+ser_state+','+username+',vm2).\n'
+				file_output = 'service_check('+ser_name+','+ser_state+',vm2).\n'
 				output_file.write(file_output)			
 		else:	
 			m1[ser_name] = [ser_state]	
-			file_output = 'service_mon('+ser_name+','+ser_state+','+username+',vm2).\n'
+			file_output = 'service_check('+ser_name+','+ser_state+',vm2).\n'
 			output_file.write(file_output)
 
 output_file.write('\n')
