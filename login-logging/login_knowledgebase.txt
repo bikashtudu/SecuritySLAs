@@ -1,5 +1,3 @@
-user_login(root,vm2).
-
 users(root).
 users(prasad).
 users(gdm).
