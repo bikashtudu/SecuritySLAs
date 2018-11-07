@@ -1,1 +1,0 @@
-cmd_/home/ubuntu/btp_cloud/lkm/ftrace_hook.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/ubuntu/btp_cloud/lkm/ftrace_hook.ko /home/ubuntu/btp_cloud/lkm/ftrace_hook.o /home/ubuntu/btp_cloud/lkm/ftrace_hook.mod.o ;  true
