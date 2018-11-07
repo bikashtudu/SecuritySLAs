@@ -1,0 +1,13 @@
+
+{% extends "polls/base.html" %}
+{% block content %}
+    <h5>You have been logged out
+    <div class="border-top pt-3">
+       <small class="text-muted">
+	 Want to Log In? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
+       </small> 
+    </div>
+{% endblock content %}
+
+
+

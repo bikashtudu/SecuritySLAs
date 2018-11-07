@@ -16,8 +16,9 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/fdtable.h>
-MODULE_DESCRIPTION("Example module hooking clone() and execve() via ftrace");
-MODULE_AUTHOR("tudu.bikash@gmail.com");
+
+MODULE_DESCRIPTION("Kernel module hooking for clone(), execve(),open(), openat(), read() and write() via ftrace");
+MODULE_AUTHOR("Bikash <tudu.bikash@gmail.com>");
 MODULE_LICENSE("GPL");
 
 /*
