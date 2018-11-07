@@ -16,6 +16,7 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/fdtable.h>
+
 MODULE_DESCRIPTION("Kernel module hooking for clone(), execve(),open(), openat(), read() and write() via ftrace");
 MODULE_AUTHOR("Bikash <tudu.bikash@gmail.com>");
 MODULE_LICENSE("GPL");
@@ -250,9 +251,9 @@ static asmlinkage long fh_sys_execve(const char __user *filename,
 	kuid_t uid = current_uid();
 	char *kernel_filename;
 	kernel_filename = duplicate_filename(filename);
-	pr_info("sys_execve(%d,%s)\n", uid.val,kernel_filename);
-	kfree(kernel_filename);
 	ret = real_sys_execve(filename, argv, envp);
+	pr_info("sys_execve(%d,%s,%ld)\n", uid.val,kernel_filename,ret);
+	kfree(kernel_filename);
 	return ret;
 }
 
@@ -299,9 +300,9 @@ static asmlinkage long fh_sys_open(const char __user *filename,
 	kuid_t uid = current_uid();
 	char *kernel_filename;
 	kernel_filename = duplicate_filename(filename);
-	pr_info("sys_open(%d,%s)",uid.val,kernel_filename);
-	kfree(kernel_filename);
 	ret = real_sys_open(filename, flags, mode);
+	pr_info("sys_open(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	kfree(kernel_filename);
 	return ret;
 }
 
@@ -319,9 +320,9 @@ static asmlinkage long fh_sys_openat(int dfd,
 	kuid_t uid = current_uid();
 	char *kernel_filename;
 	kernel_filename = duplicate_filename(filename);	
-	pr_info("sys_openat(%d,%s)",uid.val,kernel_filename);
-	kfree(kernel_filename);	
 	ret = real_sys_openat(dfd,filename, flags, mode);
+	pr_info("sys_openat(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	kfree(kernel_filename);	
 	return ret;
 }
 
@@ -337,9 +338,9 @@ static asmlinkage long fh_sys_read(unsigned int fd,
 	kuid_t uid = current_uid();
 	char *kernel_filename;
 	kernel_filename = path_from_fd(fd);
-	pr_info("sys_read(%d,%s)",uid.val,kernel_filename);
-	kfree(kernel_filename);
 	ret = real_sys_read(fd, buf, count);
+	pr_info("sys_read(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	kfree(kernel_filename);
 	return ret;
 }
 
@@ -355,9 +356,27 @@ static asmlinkage long fh_sys_write(unsigned int fd,
 	kuid_t uid = current_uid();
 	char *kernel_filename;
 	kernel_filename = path_from_fd(fd);
-	pr_info("sys_write(%d,%s)",uid.val,kernel_filename);
-	kfree(kernel_filename);
 	ret = real_sys_write(fd, buf, count);
+	pr_info("sys_write(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	kfree(kernel_filename);	
+	return ret;
+}
+
+static asmlinkage long (*real_sys_rename)(const char __user *oldname,
+	const char __user *newname);
+
+static asmlinkage long fh_sys_rename(const char __user *oldname,
+	const char __user *newname)
+{
+	long ret;
+	kuid_t uid = current_uid();
+	char *old_name,*new_name;
+	old_name = duplicate_filename(oldname);
+	new_name = duplicate_filename(newname);
+	ret = real_sys_rename(oldname,newname);
+	pr_info("sys_rename(%d,%s,%s,%ld)",uid.val,oldname,newname,ret);
+	kfree(old_name);
+	kfree(new_name);	
 	return ret;
 }
 
@@ -376,6 +395,7 @@ static struct ftrace_hook demo_hooks[] = {
 	HOOK("sys_openat", fh_sys_openat, &real_sys_openat),
 	HOOK("sys_read",   fh_sys_read,   &real_sys_read),
 	HOOK("sys_write",  fh_sys_write,  &real_sys_write),
+	HOOK("sys_rename", fh_sys_rename, &real_sys_rename),
 };
 
 static int fh_init(void)
