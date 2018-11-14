@@ -1,21 +1,19 @@
 import os 
 import re
 import getpass
+import datetime
+
+currentDT = datetime.datetime.now()
 
 username = getpass.getuser()
 
-m1 = {}
-m2 = {}
-
-output_file = open("file_knowledgebase.txt","r")
-knowledge_base = output_file.readlines()
-output_file.close()
-
 in_file = open("file_mon.txt","r")
-output_file = open("file_data.pl","w+")
+output_file = open("/home/prasad/Desktop/btp/en_file/file_data_"+str(currentDT.hour)+":"+str(currentDT.minute)+".pl","w+")
 
 file1 = "ssy"
 file2 = "/var/log/syslog"
+
+m1 = {}
 
 for line in in_file:
 	if ("ftrace_hook" in line) and ((file1 in line) or (file2 in line)):
@@ -34,9 +32,6 @@ for line in in_file:
 			file_output = 'file_mon('+name+','+cmd[0]+','+username+',vm2).\n'
 			output_file.write(file_output)
 
-	
-output_file.write('\n')
-output_file.writelines(knowledge_base)	
 output_file.close()
 in_file.close()	
 	    
