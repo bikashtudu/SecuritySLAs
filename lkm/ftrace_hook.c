@@ -1,6 +1,7 @@
 /*
  * Hooking kernel functions using ftrace framework
  *
+ * Copyright (c) 2018 ilammy
  */
 
 #define pr_fmt(fmt) "ftrace_hook: " fmt
@@ -16,11 +17,14 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/fdtable.h>
-
+#include <linux/mount.h>
+#include <linux/path.h>
+#include <linux/namei.h>
+#include <linux/fs.h>
+#include <linux/string.h>
 MODULE_DESCRIPTION("Kernel module hooking for clone(), execve(),open(), openat(), read() and write() via ftrace");
 MODULE_AUTHOR("Bikash <tudu.bikash@gmail.com>");
 MODULE_LICENSE("GPL");
-
 /*
  * There are two ways of preventing vicious recursive loops when hooking:
  * - detect recusion using function return address (USE_FENTRY_OFFSET = 0)
@@ -45,6 +49,9 @@ MODULE_LICENSE("GPL");
  * The user should fill in only &name, &hook, &orig fields.
  * Other fields are considered implementation details.
  */
+char *track_path_name[] = {"/home/test/test-log","/home/test/testlog"};
+int num_track_paths = 2;
+long track_path_inode[] = {0,0};
 struct ftrace_hook {
 	const char *name;
 	void *function;
@@ -257,7 +264,21 @@ static asmlinkage long fh_sys_execve(const char __user *filename,
 	return ret;
 }
 
-char *path_from_fd(unsigned int fd){
+long inode_from_fd(long fd){
+	long file_inode=0;	
+	struct file *file;
+	struct files_struct *files = current->files;
+	spin_lock(&files->file_lock);
+	file = fcheck_files(files, fd);
+	if (!file) {
+		spin_unlock(&files->file_lock);
+		return file_inode;
+	}
+	file_inode = file->f_inode->i_ino;
+	return file_inode;
+}
+
+char *path_from_fd(unsigned int fd,long *inode_val){
 	struct file *file;
 	struct path path;
 	struct files_struct *files = current->files;
@@ -269,6 +290,7 @@ char *path_from_fd(unsigned int fd){
 		return rpathname;
 	}
 	path = file->f_path;
+	*inode_val = file->f_inode->i_ino;
 	path_get(&file->f_path);
 	spin_unlock(&files->file_lock);
 	tmp = (char *)__get_free_page(GFP_KERNEL);
@@ -297,11 +319,22 @@ static asmlinkage long fh_sys_open(const char __user *filename,
 		umode_t mode)
 {
 	long ret;
-	kuid_t uid = current_uid();
+	// long file_inode;
+	// int i;
 	char *kernel_filename;
+	kuid_t uid;
+    struct path path;
+    kern_path(filename, LOOKUP_FOLLOW, &path);
+    //file_inode = path.dentry->d_inode->i_ino;
+	uid = current_uid();
 	kernel_filename = duplicate_filename(filename);
 	ret = real_sys_open(filename, flags, mode);
-	pr_info("sys_open(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	// file_inode=inode_from_fd(ret);
+	// for(i=0;i<num_track_paths;i++)
+    	// {
+	//	if(file_inode==track_path_inode[i])
+	//	pr_info("sys_open(%d,%s,%ld,%ld)",uid.val,kernel_filename,ret,file_inode);
+	// }
 	kfree(kernel_filename);
 	return ret;
 }
@@ -317,11 +350,22 @@ static asmlinkage long fh_sys_openat(int dfd,
 		umode_t mode)
 {
 	long ret;
-	kuid_t uid = current_uid();
+	// long file_inode;	
+	// int i;
 	char *kernel_filename;
+	kuid_t uid;
+    struct path path;
+    kern_path(filename, LOOKUP_FOLLOW, &path);
+    //file_inode = path.dentry->d_inode->i_ino;
+	uid = current_uid();
 	kernel_filename = duplicate_filename(filename);	
 	ret = real_sys_openat(dfd,filename, flags, mode);
-	pr_info("sys_openat(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	// file_inode=inode_from_fd(ret);
+	// for(i=0;i<num_track_paths;i++)
+    	// {
+	//	if(file_inode==track_path_inode[i])
+	//	pr_info("sys_openat(%d,%s,%ld,%ld)",uid.val,kernel_filename,ret,file_inode);
+	// }
 	kfree(kernel_filename);	
 	return ret;
 }
@@ -335,11 +379,17 @@ static asmlinkage long fh_sys_read(unsigned int fd,
 	size_t count)
 {
 	long ret;
+	long file_inode;
+	int i;
 	kuid_t uid = current_uid();
 	char *kernel_filename;
-	kernel_filename = path_from_fd(fd);
+	kernel_filename = path_from_fd(fd,&file_inode);
 	ret = real_sys_read(fd, buf, count);
-	pr_info("sys_read(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	for(i=0;i<num_track_paths;i++)
+    {
+		if(file_inode==track_path_inode[i])
+		pr_info("sys_read(%d,%s,%ld,%ld)",uid.val,kernel_filename,ret,file_inode);
+	}
 	kfree(kernel_filename);
 	return ret;
 }
@@ -353,11 +403,17 @@ static asmlinkage long fh_sys_write(unsigned int fd,
 	size_t count)
 {
 	long ret;
+	long file_inode;
+	int i;
 	kuid_t uid = current_uid();
 	char *kernel_filename;
-	kernel_filename = path_from_fd(fd);
+	kernel_filename = path_from_fd(fd,&file_inode);
 	ret = real_sys_write(fd, buf, count);
-	pr_info("sys_write(%d,%s,%ld)",uid.val,kernel_filename,ret);
+	for(i=0;i<num_track_paths;i++)
+    {
+		if(file_inode==track_path_inode[i])	
+		pr_info("sys_write(%d,%s,%ld,%ld)",uid.val,kernel_filename,ret,file_inode);
+	}
 	kfree(kernel_filename);	
 	return ret;
 }
@@ -401,7 +457,14 @@ static struct ftrace_hook demo_hooks[] = {
 static int fh_init(void)
 {
 	int err;
-	err = fh_install_hooks(demo_hooks, ARRAY_SIZE(demo_hooks));
+    struct path path;
+	int i;
+	for(i=0;i<num_track_paths;i++)
+    {
+		kern_path(track_path_name[i], LOOKUP_FOLLOW, &path);
+    	track_path_inode[i] = path.dentry->d_inode->i_ino;
+	}
+    err = fh_install_hooks(demo_hooks, ARRAY_SIZE(demo_hooks));
 	if (err)
 		return err;
 	pr_info("module loaded\n");
